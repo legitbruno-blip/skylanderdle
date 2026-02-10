@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skylandle - Guess the Skylander</title>
+    <title>Skylandle - Daily Guessing Game</title>
     <style>
         * {
             margin: 0;
@@ -83,6 +83,7 @@
         .legend-box.incorrect { background: linear-gradient(135deg, #ef4444, #dc2626); }
 
         #input-container {
+            position: relative;
             margin-bottom: 20px;
             display: flex;
             gap: 10px;
@@ -102,11 +103,6 @@
             text-transform: uppercase;
         }
 
-        #guess-input::placeholder {
-            color: #999;
-            text-transform: none;
-        }
-
         #submit-btn {
             padding: 15px 30px;
             font-size: 18px;
@@ -118,17 +114,6 @@
             cursor: pointer;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             transition: all 0.2s ease;
-        }
-
-        #submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-        }
-
-        #submit-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
         }
 
         #guesses-container {
@@ -146,14 +131,8 @@
         }
 
         @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .guess-name {
@@ -180,7 +159,6 @@
             text-align: center;
             font-size: 12px;
             border: 2px solid transparent;
-            transition: all 0.3s ease;
         }
 
         .attribute-cell.correct {
@@ -194,17 +172,6 @@
             border-color: #ef4444;
         }
 
-        .attribute-label {
-            font-size: 9px;
-            opacity: 0.8;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-        }
-
-        .attribute-value {
-            font-size: 13px;
-        }
-
         .header-row {
             display: grid;
             grid-template-columns: 180px repeat(5, 1fr);
@@ -215,10 +182,7 @@
             color: #ffd700;
         }
 
-        .header-cell {
-            text-align: center;
-            padding: 8px;
-        }
+        .header-cell { text-align: center; padding: 8px; }
 
         #message {
             position: fixed;
@@ -228,17 +192,12 @@
             padding: 16px 24px;
             border-radius: 8px;
             font-weight: bold;
-            font-size: 16px;
             opacity: 0;
             transition: opacity 0.3s ease;
-            pointer-events: none;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
             z-index: 1000;
         }
 
-        #message.show {
-            opacity: 1;
-        }
+        #message.show { opacity: 1; }
 
         .game-over {
             position: fixed;
@@ -254,112 +213,48 @@
             z-index: 2000;
         }
 
-        .game-over h2 {
-            font-size: 32px;
-            margin-bottom: 15px;
-            color: #ffd700;
-        }
-
-        .game-over p {
-            font-size: 18px;
-            margin-bottom: 20px;
-        }
-
-        .game-over button {
-            background: linear-gradient(135deg, #ffd700, #ffed4e);
-            color: #1e3c72;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            transition: all 0.2s ease;
-        }
-
-        .game-over button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-        }
-
         .suggestions {
             position: absolute;
+            top: 60px;
             background: white;
             color: #1e3c72;
-            max-width: 600px;
-            width: calc(100% - 140px);
+            width: calc(100% - 130px);
             max-height: 200px;
             overflow-y: auto;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             z-index: 1000;
-            margin-top: 5px;
         }
 
-        .suggestion-item {
-            padding: 12px;
-            cursor: pointer;
-            border-bottom: 1px solid #eee;
-            font-weight: bold;
-        }
-
-        .suggestion-item:hover {
-            background: #f0f0f0;
-        }
+        .suggestion-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; font-weight: bold; }
+        .suggestion-item:hover { background: #f0f0f0; }
 
         @media (max-width: 768px) {
-            .guess-row, .header-row {
-                grid-template-columns: 120px repeat(5, 1fr);
-                gap: 4px;
-            }
-
-            .attribute-cell {
-                padding: 8px 4px;
-                font-size: 10px;
-            }
-
-            .attribute-value {
-                font-size: 11px;
-            }
-
-            .guess-name {
-                font-size: 11px;
-                padding: 10px;
-            }
-
-            h1 {
-                font-size: 32px;
-            }
+            .guess-row, .header-row { grid-template-columns: 100px repeat(5, 1fr); gap: 4px; }
+            .attribute-cell, .guess-name { font-size: 10px; padding: 5px; }
+            h1 { font-size: 32px; }
         }
     </style>
 </head>
 <body>
     <header>
         <h1>SKYLANDLE</h1>
-        <div class="subtitle">Guess the Mystery Skylander!</div>
+        <div class="subtitle">Daily Mystery Skylander!</div>
     </header>
 
     <div class="instructions">
-        Type a Skylander's name and see which attributes match! Try to guess the mystery Skylander in as few tries as possible.
+        Find today's mystery Skylander. New character every day at midnight!
     </div>
 
-    <div class="legend">
-        <div class="legend-item">
-            <div class="legend-box correct"></div>
-            <span>Correct Match</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-box incorrect"></div>
-            <span>No Match</span>
-        </div>
+    <div id="game-info" style="background: rgba(255, 255, 255, 0.1); padding: 10px 20px; border-radius: 8px; margin-bottom: 20px;">
+        <span>Guesses: 0/6</span>
     </div>
 
     <div id="input-container">
-        <input type="text" id="guess-input" placeholder="Type a Skylander name..." autocomplete="off">
+        <input type="text" id="guess-input" placeholder="Enter name..." autocomplete="off">
         <button id="submit-btn">GUESS</button>
+        <div id="suggestions" class="suggestions" style="display: none;"></div>
     </div>
-    <div id="suggestions" class="suggestions" style="display: none;"></div>
 
     <div id="message"></div>
 
@@ -375,7 +270,6 @@
     </div>
 
     <script>
-        // Skylanders database with attributes
         const SKYLANDERS_DB = {
             'SPYRO': { game: 'Spyro Adventure', element: 'Magic', weapon: 'Fire Breath', gender: 'Male', color: 'Purple' },
             'GILL GRUNT': { game: 'Spyro Adventure', element: 'Water', weapon: 'Harpoon Gun', gender: 'Male', color: 'Blue' },
@@ -411,8 +305,6 @@
             'DROBOT': { game: 'Spyro Adventure', element: 'Tech', weapon: 'Laser', gender: 'Male', color: 'Yellow' },
             'WHAM SHELL': { game: 'Spyro Adventure', element: 'Water', weapon: 'Mace', gender: 'Male', color: 'Green' },
             'SLAM BAM': { game: 'Spyro Adventure', element: 'Water', weapon: 'Ice Fists', gender: 'Male', color: 'Blue' },
-            
-            // Giants
             'TREE REX': { game: 'Giants', element: 'Life', weapon: 'Laser', gender: 'Male', color: 'Green' },
             'BOUNCER': { game: 'Giants', element: 'Tech', weapon: 'Finger Gun', gender: 'Male', color: 'Blue' },
             'CRUSHER': { game: 'Giants', element: 'Earth', weapon: 'Hammer', gender: 'Male', color: 'Gray' },
@@ -421,8 +313,6 @@
             'EYE BRAWL': { game: 'Giants', element: 'Undead', weapon: 'Fists', gender: 'Male', color: 'Purple' },
             'THUMPBACK': { game: 'Giants', element: 'Water', weapon: 'Anchor', gender: 'Male', color: 'Blue' },
             'NINJINI': { game: 'Giants', element: 'Magic', weapon: 'Sword', gender: 'Female', color: 'Purple' },
-            
-            // Swap Force
             'BLAST ZONE': { game: 'Swap Force', element: 'Fire', weapon: 'Rocket', gender: 'Male', color: 'Red' },
             'WASH BUCKLER': { game: 'Swap Force', element: 'Water', weapon: 'Cutlass', gender: 'Male', color: 'Blue' },
             'MAGNA CHARGE': { game: 'Swap Force', element: 'Tech', weapon: 'Magnet Cannon', gender: 'Male', color: 'Yellow' },
@@ -439,8 +329,6 @@
             'TRAP SHADOW': { game: 'Swap Force', element: 'Magic', weapon: 'Daggers', gender: 'Male', color: 'Purple' },
             'SPY RISE': { game: 'Swap Force', element: 'Tech', weapon: 'Laser', gender: 'Male', color: 'Yellow' },
             'BOOM JET': { game: 'Swap Force', element: 'Air', weapon: 'Bombs', gender: 'Male', color: 'Blue' },
-            
-            // Trap Team
             'SNAP SHOT': { game: 'Trap Team', element: 'Water', weapon: 'Traptanium Bow', gender: 'Male', color: 'Blue' },
             'WILDFIRE': { game: 'Trap Team', element: 'Fire', weapon: 'Traptanium Bow', gender: 'Male', color: 'Red' },
             'WALLOP': { game: 'Trap Team', element: 'Earth', weapon: 'Traptanium Hammer', gender: 'Male', color: 'Brown' },
@@ -464,16 +352,12 @@
             'SPOTLIGHT': { game: 'Trap Team', element: 'Light', weapon: 'Traptanium Sword', gender: 'Female', color: 'White' },
             'BLACKOUT': { game: 'Trap Team', element: 'Dark', weapon: 'Traptanium Blade', gender: 'Male', color: 'Black' },
             'KNIGHT MARE': { game: 'Trap Team', element: 'Dark', weapon: 'Traptanium Mace', gender: 'Female', color: 'Black' },
-            
-            // SuperChargers
             'SPITFIRE': { game: 'SuperChargers', element: 'Fire', weapon: 'Flame Sword', gender: 'Male', color: 'Red' },
             'STORMBLADE': { game: 'SuperChargers', element: 'Air', weapon: 'Boomerang', gender: 'Male', color: 'Blue' },
             'FIESTA': { game: 'SuperChargers', element: 'Undead', weapon: 'Trumpet', gender: 'Male', color: 'Purple' },
             'SPLAT': { game: 'SuperChargers', element: 'Magic', weapon: 'Paintbrush', gender: 'Female', color: 'Purple' },
             'HURRICANE JET VAC': { game: 'SuperChargers', element: 'Air', weapon: 'Vacuum', gender: 'Male', color: 'Blue' },
             'NIGHTFALL': { game: 'SuperChargers', element: 'Dark', weapon: 'Traptanium Staff', gender: 'Female', color: 'Black' },
-            
-            // Imaginators
             'KING PEN': { game: 'Imaginators', element: 'Water', weapon: 'Trident', gender: 'Male', color: 'Blue' },
             'TIDEPOOL': { game: 'Imaginators', element: 'Water', weapon: 'Cutlass', gender: 'Female', color: 'Blue' },
             'PIT BOSS': { game: 'Imaginators', element: 'Earth', weapon: 'Wrench', gender: 'Male', color: 'Brown' },
@@ -497,35 +381,68 @@
         };
 
         const SKYLANDER_NAMES = Object.keys(SKYLANDERS_DB);
-        let targetSkylander = SKYLANDER_NAMES[Math.floor(Math.random() * SKYLANDER_NAMES.length)];
         let guesses = [];
         let gameOver = false;
 
+        // --- DAILY SELECTION LOGIC ---
+        function getDailySkylander() {
+            const today = new Date();
+            // Create a consistent string for the date: YYYY-MM-DD
+            const dateStr = today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate();
+            
+            // Hash function to turn the date string into a repeatable index
+            let hash = 0;
+            for (let i = 0; i < dateStr.length; i++) {
+                hash = ((hash << 5) - hash) + dateStr.charCodeAt(i);
+                hash |= 0; 
+            }
+            const index = Math.abs(hash) % SKYLANDER_NAMES.length;
+            return SKYLANDER_NAMES[index];
+        }
+
+        const targetSkylander = getDailySkylander();
         const guessInput = document.getElementById('guess-input');
         const submitBtn = document.getElementById('submit-btn');
         const guessesContainer = document.getElementById('guesses-container');
         const suggestionsDiv = document.getElementById('suggestions');
 
-        // Auto-complete functionality
+        // --- LOCAL STORAGE LOGIC ---
+        function saveState() {
+            const state = {
+                date: new Date().toDateString(),
+                guesses: guesses,
+                gameOver: gameOver
+            };
+            localStorage.setItem('skylandle_save', JSON.stringify(state));
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('skylandle_save');
+            if (!saved) return;
+            const state = JSON.parse(saved);
+            if (state.date === new Date().toDateString()) {
+                state.guesses.forEach(g => {
+                    guesses.push(g);
+                    displayGuess(g);
+                });
+                gameOver = state.gameOver;
+                document.getElementById('game-info').innerHTML = `<span>Guesses: ${guesses.length}/6</span>`;
+                if (gameOver) {
+                    const won = guesses.includes(targetSkylander);
+                    showGameOver(won);
+                }
+            }
+        }
+
+        // Auto-complete
         guessInput.addEventListener('input', (e) => {
             const value = e.target.value.toUpperCase();
-            if (value.length < 2) {
-                suggestionsDiv.style.display = 'none';
-                return;
-            }
-
-            const matches = SKYLANDER_NAMES.filter(name => 
-                name.includes(value) && !guesses.includes(name)
-            ).slice(0, 10);
-
+            if (value.length < 2) { suggestionsDiv.style.display = 'none'; return; }
+            const matches = SKYLANDER_NAMES.filter(name => name.includes(value) && !guesses.includes(name)).slice(0, 10);
             if (matches.length > 0) {
-                suggestionsDiv.innerHTML = matches
-                    .map(name => `<div class="suggestion-item" data-name="${name}">${name}</div>`)
-                    .join('');
+                suggestionsDiv.innerHTML = matches.map(name => `<div class="suggestion-item" data-name="${name}">${name}</div>`).join('');
                 suggestionsDiv.style.display = 'block';
-            } else {
-                suggestionsDiv.style.display = 'none';
-            }
+            } else { suggestionsDiv.style.display = 'none'; }
         });
 
         suggestionsDiv.addEventListener('click', (e) => {
@@ -536,52 +453,34 @@
             }
         });
 
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('#input-container')) {
-                suggestionsDiv.style.display = 'none';
-            }
-        });
-
         submitBtn.addEventListener('click', submitGuess);
-        guessInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') submitGuess();
-        });
+        guessInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') submitGuess(); });
 
         function submitGuess() {
             if (gameOver) return;
-
             const guess = guessInput.value.toUpperCase().trim();
-            
-            if (!guess) {
-                showMessage('Please enter a Skylander name!');
-                return;
-            }
-
-            if (!SKYLANDERS_DB[guess]) {
-                showMessage('Unknown Skylander! Check your spelling.');
-                return;
-            }
-
-            if (guesses.includes(guess)) {
-                showMessage('You already guessed that one!');
-                return;
-            }
+            if (!guess || !SKYLANDERS_DB[guess]) { showMessage('Check Skylander name!'); return; }
+            if (guesses.includes(guess)) { showMessage('Already guessed!'); return; }
 
             guesses.push(guess);
             displayGuess(guess);
             guessInput.value = '';
             suggestionsDiv.style.display = 'none';
+            document.getElementById('game-info').innerHTML = `<span>Guesses: ${guesses.length}/6</span>`;
 
             if (guess === targetSkylander) {
                 gameOver = true;
                 setTimeout(() => showGameOver(true), 500);
+            } else if (guesses.length >= 6) {
+                gameOver = true;
+                setTimeout(() => showGameOver(false), 500);
             }
+            saveState();
         }
 
         function displayGuess(guess) {
             const guessData = SKYLANDERS_DB[guess];
             const targetData = SKYLANDERS_DB[targetSkylander];
-
             const row = document.createElement('div');
             row.className = 'guess-row';
 
@@ -590,53 +489,61 @@
             nameCell.textContent = guess;
             row.appendChild(nameCell);
 
-            const attributes = [
-                { key: 'game', label: 'Game', value: guessData.game },
-                { key: 'element', label: 'Element', value: guessData.element },
-                { key: 'weapon', label: 'Weapon', value: guessData.weapon },
-                { key: 'gender', label: 'Gender', value: guessData.gender },
-                { key: 'color', label: 'Color', value: guessData.color }
-            ];
-
-            attributes.forEach(attr => {
+            const attrs = ['game', 'element', 'weapon', 'gender', 'color'];
+            attrs.forEach(attr => {
                 const cell = document.createElement('div');
-                cell.className = 'attribute-cell';
-                
-                const isCorrect = guessData[attr.key] === targetData[attr.key];
-                cell.classList.add(isCorrect ? 'correct' : 'incorrect');
-
-                cell.innerHTML = `
-                    <div class="attribute-label">${attr.label}</div>
-                    <div class="attribute-value">${attr.value}</div>
-                `;
-
+                cell.className = `attribute-cell ${guessData[attr] === targetData[attr] ? 'correct' : 'incorrect'}`;
+                cell.innerHTML = `<div style="font-size:8px; opacity:0.7">${attr.toUpperCase()}</div><div>${guessData[attr]}</div>`;
                 row.appendChild(cell);
             });
-
             guessesContainer.appendChild(row);
         }
 
-        function showMessage(text, duration = 2000) {
-            const messageEl = document.getElementById('message');
-            messageEl.textContent = text;
-            messageEl.classList.add('show');
-            setTimeout(() => {
-                messageEl.classList.remove('show');
-            }, duration);
-        }
-
         function showGameOver(won) {
-            const gameOverDiv = document.createElement('div');
-            gameOverDiv.className = 'game-over';
-            gameOverDiv.innerHTML = `
-                <h2>${won ? '🏆 PORTAL MASTER!' : '💫 Game Over'}</h2>
-                <p>${won ? `You found ${targetSkylander} in ${guesses.length} ${guesses.length === 1 ? 'guess' : 'guesses'}!` : `The Skylander was ${targetSkylander}`}</p>
-                <button onclick="location.reload()">Play Again</button>
+            const div = document.createElement('div');
+            div.className = 'game-over';
+            div.innerHTML = `
+                <h2>${won ? '🏆 PORTAL MASTER' : '💫 TRY AGAIN'}</h2>
+                <p>${won ? 'You found them!' : 'The Skylander was ' + targetSkylander}</p>
+                <button onclick="copyShareText()" style="padding:10px; cursor:pointer; background:#ffd700; border:none; border-radius:5px; font-weight:bold">Share Score</button>
+                <p style="font-size:12px; margin-top:15px; color:#ffd700">New Skylander in: <span id="timer"></span></p>
             `;
-            document.body.appendChild(gameOverDiv);
+            document.body.appendChild(div);
+            startTimer();
         }
 
-        console.log('Debug: Target Skylander is', targetSkylander, SKYLANDERS_DB[targetSkylander]);
+        function startTimer() {
+            setInterval(() => {
+                const now = new Date();
+                const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+                const diff = tomorrow - now;
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                const timerEl = document.getElementById('timer');
+                if (timerEl) timerEl.textContent = `${h}h ${m}m ${s}s`;
+            }, 1000);
+        }
+
+        function showMessage(text) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.classList.add('show');
+            setTimeout(() => msg.classList.remove('show'), 2000);
+        }
+
+        function copyShareText() {
+            let text = `🎮 Skylandle Daily 🎮\n`;
+            guesses.forEach(g => {
+                const gd = SKYLANDERS_DB[g];
+                const td = SKYLANDERS_DB[targetSkylander];
+                const row = [gd.game===td.game?'🟩':'🟥', gd.element===td.element?'🟩':'🟥', gd.weapon===td.weapon?'🟩':'🟥', gd.gender===td.gender?'🟩':'🟥', gd.color===td.color?'🟩':'🟥'].join('');
+                text += row + '\n';
+            });
+            navigator.clipboard.writeText(text).then(() => showMessage('Score copied!'));
+        }
+
+        loadState();
     </script>
 </body>
 </html>
