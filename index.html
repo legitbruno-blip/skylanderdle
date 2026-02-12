@@ -61,7 +61,7 @@
         .legend {
             display: flex;
             justify-content: center;
-            gap: 20px;
+            gap: 15px;
             margin-bottom: 20px;
             flex-wrap: wrap;
         }
@@ -80,6 +80,7 @@
         }
 
         .legend-box.correct { background: linear-gradient(135deg, #10b981, #059669); }
+        .legend-box.partial { background: linear-gradient(135deg, #f59e0b, #d97706); }
         .legend-box.incorrect { background: linear-gradient(135deg, #ef4444, #dc2626); }
 
         #input-container {
@@ -124,7 +125,7 @@
 
         .guess-row {
             display: grid;
-            grid-template-columns: 180px repeat(5, 1fr);
+            grid-template-columns: 180px repeat(7, 1fr);
             gap: 8px;
             margin-bottom: 10px;
             animation: slideIn 0.3s ease-out;
@@ -167,6 +168,11 @@
             box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
         }
 
+        .attribute-cell.partial {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-color: #f59e0b;
+        }
+
         .attribute-cell.incorrect {
             background: linear-gradient(135deg, #ef4444, #dc2626);
             border-color: #ef4444;
@@ -174,7 +180,7 @@
 
         .header-row {
             display: grid;
-            grid-template-columns: 180px repeat(5, 1fr);
+            grid-template-columns: 180px repeat(7, 1fr);
             gap: 8px;
             margin-bottom: 10px;
             font-size: 12px;
@@ -229,10 +235,42 @@
         .suggestion-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; font-weight: bold; }
         .suggestion-item:hover { background: #f0f0f0; }
 
+        .element-chart {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffd700;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .element-chart h3 {
+            color: #ffd700;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .element-chart img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
         @media (max-width: 768px) {
-            .guess-row, .header-row { grid-template-columns: 100px repeat(5, 1fr); gap: 4px; }
+            .guess-row, .header-row { grid-template-columns: 100px repeat(7, 1fr); gap: 4px; }
             .attribute-cell, .guess-name { font-size: 10px; padding: 5px; }
             h1 { font-size: 32px; }
+            .element-chart {
+                position: static;
+                width: 100%;
+                max-width: 300px;
+                margin: 20px auto;
+            }
         }
     </style>
 </head>
@@ -244,6 +282,21 @@
 
     <div class="instructions">
         Find today's mystery Skylander. New character every day at midnight!
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-box correct"></div>
+            <span>Correct</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box partial"></div>
+            <span>Related Element</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box incorrect"></div>
+            <span>Incorrect</span>
+        </div>
     </div>
 
     <div id="game-info" style="background: rgba(255, 255, 255, 0.1); padding: 10px 20px; border-radius: 8px; margin-bottom: 20px;">
@@ -258,126 +311,86 @@
 
     <div id="message"></div>
 
+    <div class="element-chart">
+        <h3>ELEMENT CHART</h3>
+        <img src="Elemental_chart.webp" alt="Skylanders Element Relationships">
+    </div>
+
     <div id="guesses-container">
         <div class="header-row">
             <div class="header-cell">SKYLANDER</div>
             <div class="header-cell">GAME</div>
             <div class="header-cell">ELEMENT</div>
-            <div class="header-cell">WEAPON</div>
+            <div class="header-cell">SPEED</div>
+            <div class="header-cell">HEALTH</div>
+            <div class="header-cell">ARMOR</div>
             <div class="header-cell">GENDER</div>
             <div class="header-cell">COLOR</div>
         </div>
     </div>
 
     <script>
+        // Element relationships - each element points to two others
+        const ELEMENT_RELATIONSHIPS = {
+            'Undead': ['Earth', 'Life'],
+            'Earth': ['Tech', 'Water'],
+            'Tech': ['Magic', 'Fire'],
+            'Magic': ['Undead', 'Air'],
+            'Air': ['Life', 'Earth'],
+            'Life': ['Water', 'Tech'],
+            'Water': ['Fire', 'Magic'],
+            'Fire': ['Air', 'Undead']
+        };
+
         const SKYLANDERS_DB = {
-            'SPYRO': { game: 'Spyro Adventure', element: 'Magic', weapon: 'Fire Breath', gender: 'Male', color: 'Purple' },
-            'GILL GRUNT': { game: 'Spyro Adventure', element: 'Water', weapon: 'Harpoon Gun', gender: 'Male', color: 'Blue' },
-            'TRIGGER HAPPY': { game: 'Spyro Adventure', element: 'Tech', weapon: 'Dual Pistols', gender: 'Male', color: 'Yellow' },
-            'ERUPTOR': { game: 'Spyro Adventure', element: 'Fire', weapon: 'Lava Blob', gender: 'Male', color: 'Red' },
-            'STEALTH ELF': { game: 'Spyro Adventure', element: 'Life', weapon: 'Daggers', gender: 'Female', color: 'Green' },
-            'TERRAFIN': { game: 'Spyro Adventure', element: 'Earth', weapon: 'Brass Knuckles', gender: 'Male', color: 'Brown' },
-            'DARK SPYRO': { game: 'Spyro Adventure', element: 'Undead', weapon: 'Fire Breath', gender: 'Male', color: 'Black' },
-            'CHOP CHOP': { game: 'Spyro Adventure', element: 'Undead', weapon: 'Sword', gender: 'Male', color: 'Blue' },
-            'BASH': { game: 'Spyro Adventure', element: 'Earth', weapon: 'Tail Slam', gender: 'Male', color: 'Gray' },
-            'CYNDER': { game: 'Spyro Adventure', element: 'Undead', weapon: 'Lightning', gender: 'Female', color: 'Purple' },
-            'FLAMESLINGER': { game: 'Spyro Adventure', element: 'Fire', weapon: 'Bow', gender: 'Male', color: 'Orange' },
-            'ZAP': { game: 'Spyro Adventure', element: 'Water', weapon: 'Lightning', gender: 'Male', color: 'Blue' },
-            'WRECKING BALL': { game: 'Spyro Adventure', element: 'Magic', weapon: 'Tongue', gender: 'Male', color: 'Blue' },
-            'SONIC BOOM': { game: 'Spyro Adventure', element: 'Air', weapon: 'Roar', gender: 'Female', color: 'Blue' },
-            'WHIRLWIND': { game: 'Spyro Adventure', element: 'Air', weapon: 'Rainbow', gender: 'Female', color: 'White' },
-            'DRILL SERGEANT': { game: 'Spyro Adventure', element: 'Tech', weapon: 'Drill', gender: 'Male', color: 'Yellow' },
-            'BOOMER': { game: 'Spyro Adventure', element: 'Tech', weapon: 'Dynamite', gender: 'Male', color: 'Yellow' },
-            'WARNADO': { game: 'Spyro Adventure', element: 'Air', weapon: 'Spin Attack', gender: 'Male', color: 'Green' },
-            'CAMO': { game: 'Spyro Adventure', element: 'Life', weapon: 'Melon Cannon', gender: 'Male', color: 'Green' },
-            'IGNITOR': { game: 'Spyro Adventure', element: 'Fire', weapon: 'Sword', gender: 'Male', color: 'Orange' },
-            'SUNBURN': { game: 'Spyro Adventure', element: 'Fire', weapon: 'Fire Breath', gender: 'Male', color: 'Red' },
-            'ZOO LOU': { game: 'Swap Force', element: 'Life', weapon: 'Boomerang', gender: 'Male', color: 'Green' },
-            'DINO RANG': { game: 'Spyro Adventure', element: 'Earth', weapon: 'Boomerang', gender: 'Male', color: 'Brown' },
-            'PRISM BREAK': { game: 'Spyro Adventure', element: 'Earth', weapon: 'Laser Beam', gender: 'Male', color: 'Blue' },
-            'STUMP SMASH': { game: 'Spyro Adventure', element: 'Life', weapon: 'Hammers', gender: 'Male', color: 'Green' },
-            'LIGHTNING ROD': { game: 'Spyro Adventure', element: 'Air', weapon: 'Lightning', gender: 'Male', color: 'Blue' },
-            'ZOOK': { game: 'Spyro Adventure', element: 'Life', weapon: 'Bazooka', gender: 'Male', color: 'Green' },
-            'GHOST ROASTER': { game: 'Spyro Adventure', element: 'Undead', weapon: 'Chain', gender: 'Male', color: 'Purple' },
-            'VOODOOD': { game: 'Spyro Adventure', element: 'Magic', weapon: 'Axe', gender: 'Male', color: 'Blue' },
-            'DOUBLE TROUBLE': { game: 'Spyro Adventure', element: 'Magic', weapon: 'Magic Beam', gender: 'Male', color: 'Yellow' },
-            'HEX': { game: 'Spyro Adventure', element: 'Undead', weapon: 'Skull Rain', gender: 'Female', color: 'Purple' },
-            'DROBOT': { game: 'Spyro Adventure', element: 'Tech', weapon: 'Laser', gender: 'Male', color: 'Yellow' },
-            'WHAM SHELL': { game: 'Spyro Adventure', element: 'Water', weapon: 'Mace', gender: 'Male', color: 'Green' },
-            'SLAM BAM': { game: 'Spyro Adventure', element: 'Water', weapon: 'Ice Fists', gender: 'Male', color: 'Blue' },
-            'TREE REX': { game: 'Giants', element: 'Life', weapon: 'Laser', gender: 'Male', color: 'Green' },
-            'BOUNCER': { game: 'Giants', element: 'Tech', weapon: 'Finger Gun', gender: 'Male', color: 'Blue' },
-            'CRUSHER': { game: 'Giants', element: 'Earth', weapon: 'Hammer', gender: 'Male', color: 'Gray' },
-            'SWARM': { game: 'Giants', element: 'Air', weapon: 'Sword', gender: 'Male', color: 'Orange' },
-            'HOT HEAD': { game: 'Giants', element: 'Fire', weapon: 'Oil Cannon', gender: 'Male', color: 'Red' },
-            'EYE BRAWL': { game: 'Giants', element: 'Undead', weapon: 'Fists', gender: 'Male', color: 'Purple' },
-            'THUMPBACK': { game: 'Giants', element: 'Water', weapon: 'Anchor', gender: 'Male', color: 'Blue' },
-            'NINJINI': { game: 'Giants', element: 'Magic', weapon: 'Sword', gender: 'Female', color: 'Purple' },
-            'BLAST ZONE': { game: 'Swap Force', element: 'Fire', weapon: 'Rocket', gender: 'Male', color: 'Red' },
-            'WASH BUCKLER': { game: 'Swap Force', element: 'Water', weapon: 'Cutlass', gender: 'Male', color: 'Blue' },
-            'MAGNA CHARGE': { game: 'Swap Force', element: 'Tech', weapon: 'Magnet Cannon', gender: 'Male', color: 'Yellow' },
-            'RATTLE SHAKE': { game: 'Swap Force', element: 'Undead', weapon: 'Revolver', gender: 'Male', color: 'Green' },
-            'FREE RANGER': { game: 'Swap Force', element: 'Air', weapon: 'Boomerang', gender: 'Male', color: 'Blue' },
-            'RUBBLE ROUSER': { game: 'Swap Force', element: 'Earth', weapon: 'Drill', gender: 'Male', color: 'Brown' },
-            'DOOM STONE': { game: 'Swap Force', element: 'Earth', weapon: 'Club', gender: 'Male', color: 'Purple' },
-            'NIGHT SHIFT': { game: 'Swap Force', element: 'Undead', weapon: 'Boxing Gloves', gender: 'Male', color: 'Black' },
-            'FREEZE BLADE': { game: 'Swap Force', element: 'Water', weapon: 'Ice Blade', gender: 'Male', color: 'Blue' },
-            'FIRE KRAKEN': { game: 'Swap Force', element: 'Fire', weapon: 'Whip', gender: 'Male', color: 'Red' },
-            'STINK BOMB': { game: 'Swap Force', element: 'Life', weapon: 'Nunchucks', gender: 'Male', color: 'Green' },
-            'GRILLA DRILLA': { game: 'Swap Force', element: 'Life', weapon: 'Drill', gender: 'Male', color: 'Green' },
-            'HOOT LOOP': { game: 'Swap Force', element: 'Magic', weapon: 'Teleport', gender: 'Male', color: 'Blue' },
-            'TRAP SHADOW': { game: 'Swap Force', element: 'Magic', weapon: 'Daggers', gender: 'Male', color: 'Purple' },
-            'SPY RISE': { game: 'Swap Force', element: 'Tech', weapon: 'Laser', gender: 'Male', color: 'Yellow' },
-            'BOOM JET': { game: 'Swap Force', element: 'Air', weapon: 'Bombs', gender: 'Male', color: 'Blue' },
-            'SNAP SHOT': { game: 'Trap Team', element: 'Water', weapon: 'Traptanium Bow', gender: 'Male', color: 'Blue' },
-            'WILDFIRE': { game: 'Trap Team', element: 'Fire', weapon: 'Traptanium Bow', gender: 'Male', color: 'Red' },
-            'WALLOP': { game: 'Trap Team', element: 'Earth', weapon: 'Traptanium Hammer', gender: 'Male', color: 'Brown' },
-            'HEAD RUSH': { game: 'Trap Team', element: 'Air', weapon: 'Traptanium Ram', gender: 'Female', color: 'Purple' },
-            'FIST BUMP': { game: 'Trap Team', element: 'Earth', weapon: 'Traptanium Fist', gender: 'Male', color: 'Gray' },
-            'ROCKY ROLL': { game: 'Trap Team', element: 'Earth', weapon: 'Boulder Roll', gender: 'Male', color: 'Blue' },
-            'BUSHWHACK': { game: 'Trap Team', element: 'Life', weapon: 'Traptanium Axe', gender: 'Male', color: 'Green' },
-            'TUFF LUCK': { game: 'Trap Team', element: 'Magic', weapon: 'Traptanium Warblades', gender: 'Female', color: 'Blue' },
-            'FOOD FIGHT': { game: 'Trap Team', element: 'Life', weapon: 'Tomato Cannon', gender: 'Male', color: 'Red' },
-            'HIGH FIVE': { game: 'Trap Team', element: 'Air', weapon: 'Traptanium Boomerang', gender: 'Male', color: 'Blue' },
-            'FUNNY BONE': { game: 'Trap Team', element: 'Undead', weapon: 'Traptanium Sword', gender: 'Male', color: 'Purple' },
-            'CHOPPER': { game: 'Trap Team', element: 'Tech', weapon: 'Traptanium Blades', gender: 'Male', color: 'Yellow' },
-            'SHROOMBOOM': { game: 'Giants', element: 'Life', weapon: 'Rocket', gender: 'Male', color: 'Blue' },
-            'GRIM CREEPER': { game: 'Trap Team', element: 'Undead', weapon: 'Scythe', gender: 'Male', color: 'Green' },
-            'GUSTO': { game: 'Trap Team', element: 'Air', weapon: 'Boomerang', gender: 'Male', color: 'Blue' },
-            'THUNDERBOLT': { game: 'Trap Team', element: 'Air', weapon: 'Traptanium Mace', gender: 'Male', color: 'Blue' },
-            'BLADES': { game: 'Trap Team', element: 'Air', weapon: 'Swords', gender: 'Male', color: 'Green' },
-            'TORCH': { game: 'Trap Team', element: 'Fire', weapon: 'Traptanium Flamethrower', gender: 'Male', color: 'Orange' },
-            'TRAIL BLAZER': { game: 'Trap Team', element: 'Fire', weapon: 'Skateboard', gender: 'Male', color: 'Red' },
-            'KNIGHT LIGHT': { game: 'Trap Team', element: 'Light', weapon: 'Traptanium Sword', gender: 'Male', color: 'White' },
-            'SPOTLIGHT': { game: 'Trap Team', element: 'Light', weapon: 'Traptanium Sword', gender: 'Female', color: 'White' },
-            'BLACKOUT': { game: 'Trap Team', element: 'Dark', weapon: 'Traptanium Blade', gender: 'Male', color: 'Black' },
-            'KNIGHT MARE': { game: 'Trap Team', element: 'Dark', weapon: 'Traptanium Mace', gender: 'Female', color: 'Black' },
-            'SPITFIRE': { game: 'SuperChargers', element: 'Fire', weapon: 'Flame Sword', gender: 'Male', color: 'Red' },
-            'STORMBLADE': { game: 'SuperChargers', element: 'Air', weapon: 'Boomerang', gender: 'Male', color: 'Blue' },
-            'FIESTA': { game: 'SuperChargers', element: 'Undead', weapon: 'Trumpet', gender: 'Male', color: 'Purple' },
-            'SPLAT': { game: 'SuperChargers', element: 'Magic', weapon: 'Paintbrush', gender: 'Female', color: 'Purple' },
-            'HURRICANE JET VAC': { game: 'SuperChargers', element: 'Air', weapon: 'Vacuum', gender: 'Male', color: 'Blue' },
-            'NIGHTFALL': { game: 'SuperChargers', element: 'Dark', weapon: 'Traptanium Staff', gender: 'Female', color: 'Black' },
-            'KING PEN': { game: 'Imaginators', element: 'Water', weapon: 'Trident', gender: 'Male', color: 'Blue' },
-            'TIDEPOOL': { game: 'Imaginators', element: 'Water', weapon: 'Cutlass', gender: 'Female', color: 'Blue' },
-            'PIT BOSS': { game: 'Imaginators', element: 'Earth', weapon: 'Wrench', gender: 'Male', color: 'Brown' },
-            'BARBELLA': { game: 'Imaginators', element: 'Earth', weapon: 'Dumbbells', gender: 'Female', color: 'Pink' },
-            'AIR STRIKE': { game: 'Imaginators', element: 'Air', weapon: 'Missiles', gender: 'Male', color: 'Blue' },
-            'EMBER': { game: 'Imaginators', element: 'Fire', weapon: 'Fire Sword', gender: 'Female', color: 'Red' },
-            'CHAIN REACTION': { game: 'Imaginators', element: 'Tech', weapon: 'Chain Whips', gender: 'Female', color: 'Yellow' },
-            'HOOD SICKLE': { game: 'Imaginators', element: 'Undead', weapon: 'Scythe', gender: 'Male', color: 'Green' },
-            'CHOPSCOTCH': { game: 'Imaginators', element: 'Magic', weapon: 'Axe', gender: 'Female', color: 'Purple' },
-            'PAIN YATTA': { game: 'Imaginators', element: 'Magic', weapon: 'Candy Blaster', gender: 'Male', color: 'Rainbow' },
-            'MYSTICAT': { game: 'Imaginators', element: 'Magic', weapon: 'Staff', gender: 'Female', color: 'Purple' },
-            'STARCAST': { game: 'Imaginators', element: 'Magic', weapon: 'Staff', gender: 'Male', color: 'Blue' },
-            'BUCKSHOT': { game: 'Imaginators', element: 'Earth', weapon: 'Crossbow', gender: 'Male', color: 'Green' },
-            'AURORA': { game: 'Imaginators', element: 'Light', weapon: 'Bow', gender: 'Female', color: 'White' },
-            'FLARE WOLF': { game: 'Imaginators', element: 'Fire', weapon: 'Howitzer', gender: 'Male', color: 'Orange' },
-            'WILD STORM': { game: 'Imaginators', element: 'Air', weapon: 'Boomerang', gender: 'Male', color: 'Blue' },
-            'RO BOW': { game: 'Imaginators', element: 'Tech', weapon: 'Bow', gender: 'Male', color: 'Yellow' },
-            'BAD JUJU': { game: 'Imaginators', element: 'Magic', weapon: 'Staff', gender: 'Female', color: 'Purple' },
-            'GRAVE CLOBBER': { game: 'Imaginators', element: 'Earth', weapon: 'Sarcophagus', gender: 'Male', color: 'Brown' },
-            'BLASTER TRON': { game: 'Imaginators', element: 'Tech', weapon: 'Blaster', gender: 'Male', color: 'Blue' }
+            'SPYRO': { game: 'Spyro Adventure', element: 'Magic', speed: 50, health: 280, armor: 18, gender: 'Male', color: 'Purple' },
+            'GILL GRUNT': { game: 'Spyro Adventure', element: 'Water', speed: 35, health: 270, armor: 6, gender: 'Male', color: 'Blue' },
+            'TRIGGER HAPPY': { game: 'Spyro Adventure', element: 'Tech', speed: 50, health: 200, armor: 30, gender: 'Male', color: 'Yellow' },
+            'ERUPTOR': { game: 'Spyro Adventure', element: 'Fire', speed: 35, health: 290, armor: 18, gender: 'Male', color: 'Red' },
+            'STEALTH ELF': { game: 'Spyro Adventure', element: 'Life', speed: 50, health: 270, armor: 12, gender: 'Female', color: 'Green' },
+            'TERRAFIN': { game: 'Spyro Adventure', element: 'Earth', speed: 35, health: 310, armor: 18, gender: 'Male', color: 'Brown' },
+            'CHOP CHOP': { game: 'Spyro Adventure', element: 'Undead', speed: 50, health: 300, armor: 24, gender: 'Male', color: 'Blue' },
+            'BASH': { game: 'Spyro Adventure', element: 'Earth', speed: 35, health: 310, armor: 12, gender: 'Male', color: 'Gray' },
+            'CYNDER': { game: 'Spyro Adventure', element: 'Undead', speed: 43, health: 260, armor: 18, gender: 'Female', color: 'Purple' },
+            'FLAMESLINGER': { game: 'Spyro Adventure', element: 'Fire', speed: 50, health: 250, armor: 24, gender: 'Male', color: 'Orange' },
+            'ZAP': { game: 'Spyro Adventure', element: 'Water', speed: 50, health: 260, armor: 24, gender: 'Male', color: 'Blue' },
+            'WRECKING BALL': { game: 'Spyro Adventure', element: 'Magic', speed: 43, health: 270, armor: 24, gender: 'Male', color: 'Blue' },
+            'SONIC BOOM': { game: 'Spyro Adventure', element: 'Air', speed: 50, health: 280, armor: 18, gender: 'Female', color: 'Blue' },
+            'WHIRLWIND': { game: 'Spyro Adventure', element: 'Air', speed: 50, health: 270, armor: 18, gender: 'Female', color: 'White' },
+            'DRILL SERGEANT': { game: 'Spyro Adventure', element: 'Tech', speed: 43, health: 290, armor: 12, gender: 'Male', color: 'Yellow' },
+            'BOOMER': { game: 'Spyro Adventure', element: 'Tech', speed: 35, health: 230, armor: 18, gender: 'Male', color: 'Yellow' },
+            'WARNADO': { game: 'Spyro Adventure', element: 'Air', speed: 35, health: 310, armor: 30, gender: 'Male', color: 'Green' },
+            'CAMO': { game: 'Spyro Adventure', element: 'Life', speed: 50, health: 300, armor: 24, gender: 'Male', color: 'Green' },
+            'IGNITOR': { game: 'Spyro Adventure', element: 'Fire', speed: 43, health: 240, armor: 12, gender: 'Male', color: 'Orange' },
+            'SUNBURN': { game: 'Spyro Adventure', element: 'Fire', speed: 43, health: 280, armor: 24, gender: 'Male', color: 'Red' },
+            'DINO RANG': { game: 'Spyro Adventure', element: 'Earth', speed: 43, health: 300, armor: 30, gender: 'Male', color: 'Brown' },
+            'PRISM BREAK': { game: 'Spyro Adventure', element: 'Earth', speed: 35, health: 290, armor: 18, gender: 'Male', color: 'Blue' },
+            'STUMP SMASH': { game: 'Spyro Adventure', element: 'Life', speed: 43, health: 340, armor: 30, gender: 'Male', color: 'Green' },
+            'LIGHTNING ROD': { game: 'Spyro Adventure', element: 'Air', speed: 43, health: 290, armor: 18, gender: 'Male', color: 'Blue' },
+            'ZOOK': { game: 'Spyro Adventure', element: 'Life', speed: 43, health: 260, armor: 30, gender: 'Male', color: 'Green' },
+            'GHOST ROASTER': { game: 'Spyro Adventure', element: 'Undead', speed: 43, health: 280, armor: 24, gender: 'Male', color: 'Purple' },
+            'VOODOOD': { game: 'Spyro Adventure', element: 'Magic', speed: 35, health: 290, armor: 12, gender: 'Male', color: 'Blue' },
+            'DOUBLE TROUBLE': { game: 'Spyro Adventure', element: 'Magic', speed: 35, health: 250, armor: 18, gender: 'Male', color: 'Yellow' },
+            'HEX': { game: 'Spyro Adventure', element: 'Undead', speed: 43, health: 270, armor: 18, gender: 'Female', color: 'Purple' },
+            'DROBOT': { game: 'Spyro Adventure', element: 'Tech', speed: 43, health: 290, armor: 24, gender: 'Male', color: 'Yellow' },
+            'WHAM SHELL': { game: 'Spyro Adventure', element: 'Water', speed: 50, health: 300, armor: 18, gender: 'Male', color: 'Green' },
+            'SLAM BAM': { game: 'Spyro Adventure', element: 'Water', speed: 35, health: 310, armor: 30, gender: 'Male', color: 'Blue' },
+            'TREE REX': { game: 'Giants', element: 'Life', speed: 20, health: 430, armor: 24, gender: 'Male', color: 'Green' },
+            'BOUNCER': { game: 'Giants', element: 'Tech', speed: 60, health: 430, armor: 24, gender: 'Male', color: 'Blue' },
+            'CRUSHER': { game: 'Giants', element: 'Earth', speed: 20, health: 470, armor: 24, gender: 'Male', color: 'Gray' },
+            'SWARM': { game: 'Giants', element: 'Air', speed: 20, health: 400, armor: 12, gender: 'Male', color: 'Orange' },
+            'HOT HEAD': { game: 'Giants', element: 'Fire', speed: 20, health: 430, armor: 12, gender: 'Male', color: 'Red' },
+            'EYE BRAWL': { game: 'Giants', element: 'Undead', speed: 20, health: 430, armor: 30, gender: 'Male', color: 'Purple' },
+            'THUMPBACK': { game: 'Giants', element: 'Water', speed: 20, health: 460, armor: 30, gender: 'Male', color: 'Blue' },
+            'NINJINI': { game: 'Giants', element: 'Magic', speed: 60, health: 410, armor: 48, gender: 'Female', color: 'Purple' },
+            'JET VAC': { game: 'Giants', element: 'Air', speed: 50, health: 240, armor: 12, gender: 'Male', color: 'Blue' },
+            'POP FIZZ': { game: 'Giants', element: 'Magic', speed: 43, health: 270, armor: 18, gender: 'Male', color: 'Blue' },
+            'CHILL': { game: 'Giants', element: 'Water', speed: 43, health: 260, armor: 24, gender: 'Female', color: 'Blue' },
+            'FRIGHT RIDER': { game: 'Giants', element: 'Undead', speed: 43, health: 270, armor: 12, gender: 'Male', color: 'Purple' },
+            'SHROOMBOOM': { game: 'Giants', element: 'Life', speed: 43, health: 260, armor: 18, gender: 'Male', color: 'Green' },
+            'FLASHWING': { game: 'Giants', element: 'Earth', speed: 43, health: 260, armor: 24, gender: 'Female', color: 'Blue' },
+            'HOT DOG': { game: 'Giants', element: 'Fire', speed: 43, health: 250, armor: 6, gender: 'Male', color: 'Orange' },
+            'SPROCKET': { game: 'Giants', element: 'Tech', speed: 43, health: 240, armor: 30, gender: 'Female', color: 'Yellow' },
         };
 
         const SKYLANDER_NAMES = Object.keys(SKYLANDERS_DB);
@@ -387,16 +400,21 @@
         // --- DAILY SELECTION LOGIC ---
         function getDailySkylander() {
             const today = new Date();
-            // Create a consistent string for the date: YYYY-MM-DD
-            const dateStr = today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate();
-            
-            // Hash function to turn the date string into a repeatable index
-            let hash = 0;
-            for (let i = 0; i < dateStr.length; i++) {
-                hash = ((hash << 5) - hash) + dateStr.charCodeAt(i);
-                hash |= 0; 
+            // Calculate days since Unix epoch for a consistent daily seed
+            const epochDays = Math.floor(today.getTime() / (1000 * 60 * 60 * 24));
+
+            // Mulberry32 PRNG - provides good distribution across the array
+            function mulberry32(seed) {
+                return function() {
+                    let t = seed += 0x6D2B79F5;
+                    t = Math.imul(t ^ t >>> 15, t | 1);
+                    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+                    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+                }
             }
-            const index = Math.abs(hash) % SKYLANDER_NAMES.length;
+
+            const rng = mulberry32(epochDays);
+            const index = Math.floor(rng() * SKYLANDER_NAMES.length);
             return SKYLANDER_NAMES[index];
         }
 
@@ -489,11 +507,33 @@
             nameCell.textContent = guess;
             row.appendChild(nameCell);
 
-            const attrs = ['game', 'element', 'weapon', 'gender', 'color'];
+            const attrs = ['game', 'element', 'speed', 'health', 'armor', 'gender', 'color'];
+            const numericAttrs = ['speed', 'health', 'armor'];
+
             attrs.forEach(attr => {
                 const cell = document.createElement('div');
-                cell.className = `attribute-cell ${guessData[attr] === targetData[attr] ? 'correct' : 'incorrect'}`;
-                cell.innerHTML = `<div style="font-size:8px; opacity:0.7">${attr.toUpperCase()}</div><div>${guessData[attr]}</div>`;
+                const isCorrect = guessData[attr] === targetData[attr];
+
+                // Check for partial match (element relationships)
+                let isPartial = false;
+                if (attr === 'element' && !isCorrect) {
+                    const guessElement = guessData[attr];
+                    const targetElement = targetData[attr];
+                    // Check if target element points to guess (one-directional)
+                    isPartial = ELEMENT_RELATIONSHIPS[targetElement]?.includes(guessElement);
+                }
+
+                const cellClass = isCorrect ? 'correct' : (isPartial ? 'partial' : 'incorrect');
+                cell.className = `attribute-cell ${cellClass}`;
+
+                let displayValue = guessData[attr];
+                // Add arrows for numeric attributes
+                if (!isCorrect && numericAttrs.includes(attr)) {
+                    const arrow = guessData[attr] < targetData[attr] ? ' ↑' : ' ↓';
+                    displayValue = guessData[attr] + arrow;
+                }
+
+                cell.innerHTML = `<div style="font-size:8px; opacity:0.7">${attr.toUpperCase()}</div><div>${displayValue}</div>`;
                 row.appendChild(cell);
             });
             guessesContainer.appendChild(row);
@@ -537,7 +577,20 @@
             guesses.forEach(g => {
                 const gd = SKYLANDERS_DB[g];
                 const td = SKYLANDERS_DB[targetSkylander];
-                const row = [gd.game===td.game?'🟩':'🟥', gd.element===td.element?'🟩':'🟥', gd.weapon===td.weapon?'🟩':'🟥', gd.gender===td.gender?'🟩':'🟥', gd.color===td.color?'🟩':'🟥'].join('');
+
+                // Check element relationship for partial match (one-directional)
+                const elementPartial = gd.element !== td.element &&
+                    (ELEMENT_RELATIONSHIPS[td.element]?.includes(gd.element));
+
+                const row = [
+                    gd.game===td.game?'🟩':'🟥',
+                    gd.element===td.element?'🟩':(elementPartial?'🟨':'🟥'),
+                    gd.speed===td.speed?'🟩':'🟥',
+                    gd.health===td.health?'🟩':'🟥',
+                    gd.armor===td.armor?'🟩':'🟥',
+                    gd.gender===td.gender?'🟩':'🟥',
+                    gd.color===td.color?'🟩':'🟥'
+                ].join('');
                 text += row + '\n';
             });
             navigator.clipboard.writeText(text).then(() => showMessage('Score copied!'));
