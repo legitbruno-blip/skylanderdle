@@ -400,8 +400,8 @@
         // --- DAILY SELECTION LOGIC ---
         function getDailySkylander() {
             const today = new Date();
-            // Calculate days since Unix epoch for a consistent daily seed
-            const epochDays = Math.floor(today.getTime() / (1000 * 60 * 60 * 24));
+            // Calculate days since Unix epoch using UTC for consistency across timezones
+            const epochDays = Math.floor(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()) / (1000 * 60 * 60 * 24));
 
             // Mulberry32 PRNG - provides good distribution across the array
             function mulberry32(seed) {
