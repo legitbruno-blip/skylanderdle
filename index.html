@@ -398,10 +398,16 @@
         let gameOver = false;
 
         // --- DAILY SELECTION LOGIC ---
+        // Helper function to get current date in EST
+        function getESTDate() {
+            const estString = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
+            return new Date(estString);
+        }
+
         function getDailySkylander() {
-            const today = new Date();
-            // Calculate days since Unix epoch using UTC for consistency across timezones
-            const epochDays = Math.floor(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()) / (1000 * 60 * 60 * 24));
+            const today = getESTDate();
+            // Calculate days since Unix epoch using EST for consistency
+            const epochDays = Math.floor(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) / (1000 * 60 * 60 * 24));
 
             // Mulberry32 PRNG - provides good distribution across the array
             function mulberry32(seed) {
@@ -427,7 +433,7 @@
         // --- LOCAL STORAGE LOGIC ---
         function saveState() {
             const state = {
-                date: new Date().toDateString(),
+                date: getESTDate().toDateString(),
                 guesses: guesses,
                 gameOver: gameOver
             };
@@ -438,7 +444,7 @@
             const saved = localStorage.getItem('skylandle_save');
             if (!saved) return;
             const state = JSON.parse(saved);
-            if (state.date === new Date().toDateString()) {
+            if (state.date === getESTDate().toDateString()) {
                 state.guesses.forEach(g => {
                     guesses.push(g);
                     displayGuess(g);
@@ -554,7 +560,7 @@
 
         function startTimer() {
             setInterval(() => {
-                const now = new Date();
+                const now = getESTDate();
                 const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
                 const diff = tomorrow - now;
                 const h = Math.floor(diff / 3600000);
@@ -573,7 +579,9 @@
         }
 
         function copyShareText() {
+            const won = guesses.includes(targetSkylander);
             let text = `🎮 Skylandle Daily 🎮\n`;
+            text += `${won ? guesses.length : 'X'}/6 ${won ? '🏆' : 'dumbass over here'}\n\n`;
             guesses.forEach(g => {
                 const gd = SKYLANDERS_DB[g];
                 const td = SKYLANDERS_DB[targetSkylander];
